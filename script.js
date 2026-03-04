@@ -1,6 +1,4 @@
-// This is the boilerplate code given for you
-// You can modify this code
-// Product data
+// script.js
 const products = [
   { id: 1, name: "Product 1", price: 10 },
   { id: 2, name: "Product 2", price: 20 },
@@ -9,30 +7,53 @@ const products = [
   { id: 5, name: "Product 5", price: 50 },
 ];
 
-// DOM elements
 const productList = document.getElementById("product-list");
+const cartList = document.getElementById("cart-list");
+const clearBtn = document.getElementById("clear-cart-btn");
 
-// Render product list
-function renderProducts() {
-  products.forEach((product) => {
+const loadCart = () => {
+  const data = sessionStorage.getItem("cart");
+  return data ? JSON.parse(data) : [];
+};
+
+const saveCart = (cart) => {
+  sessionStorage.setItem("cart", JSON.stringify(cart));
+};
+
+const renderProducts = () => {
+  productList.innerHTML = "";
+  products.forEach((p) => {
     const li = document.createElement("li");
-    li.innerHTML = `${product.name} - $${product.price} <button class="add-to-cart-btn" data-id="${product.id}">Add to Cart</button>`;
+    li.textContent = `${p.name} - $${p.price} `;
+
+    const btn = document.createElement("button");
+    btn.textContent = "Add to Cart";
+    btn.addEventListener("click", () => {
+      const cart = loadCart();
+      cart.push(p);
+      saveCart(cart);
+      renderCart();
+    });
+
+    li.appendChild(btn);
     productList.appendChild(li);
   });
-}
+};
 
-// Render cart list
-function renderCart() {}
+const renderCart = () => {
+  const cart = loadCart();
+  cartList.innerHTML = "";
+  cart.forEach((p) => {
+    const li = document.createElement("li");
+    li.textContent = `${p.name} - $${p.price}`;
+    cartList.appendChild(li);
+  });
+};
 
-// Add item to cart
-function addToCart(productId) {}
+clearBtn.addEventListener("click", () => {
+  saveCart([]);
+  renderCart();
+});
 
-// Remove item from cart
-function removeFromCart(productId) {}
-
-// Clear cart
-function clearCart() {}
-
-// Initial render
 renderProducts();
 renderCart();

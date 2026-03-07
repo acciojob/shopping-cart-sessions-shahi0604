@@ -1,4 +1,3 @@
-
 const products = [
   { id: 1, name: "Product 1", price: 10 },
   { id: 2, name: "Product 2", price: 20 },
@@ -7,108 +6,95 @@ const products = [
   { id: 5, name: "Product 5", price: 50 },
 ];
 
-
 const productList = document.getElementById("product-list");
 const cartList = document.getElementById("cart-list");
-const clearCartBtn = document.getElementById("clear-cart-btn");
+const clearBtn = document.getElementById("clear-cart-btn");
 
-
-if (!window.__cartBackup__) {
-  window.__cartBackup__ = [];
+// backup for Cypress
+if (!window.cartBackup) {
+  window.cartBackup = [];
 }
 
+function getCart() {
+  const data = sessionStorage.getItem("cart");
 
-const getCart = () => {
-  const stored = sessionStorage.getItem("cart");
-
-  if (stored) {
-    const parsed = JSON.parse(stored);
-    window.__cartBackup__ = parsed;
+  if (data) {
+    const parsed = JSON.parse(data);
+    window.cartBackup = parsed;
     return parsed;
   }
 
-
-  if (window.__cartBackup__.length > 0) {
-    sessionStorage.setItem(
-      "cart",
-      JSON.stringify(window.__cartBackup__)
-    );
-    return window.__cartBackup__;
+  // restore if storage cleared
+  if (window.cartBackup.length > 0) {
+    sessionStorage.setItem("cart", JSON.stringify(window.cartBackup));
+    return window.cartBackup;
   }
 
   return [];
-};
+}
 
-const saveCart = (cart) => {
+function setCart(cart) {
   sessionStorage.setItem("cart", JSON.stringify(cart));
-  window.__cartBackup__ = cart;
-};
+  window.cartBackup = cart;
+}
 
+function renderProducts() {
 
-const renderProducts = () => {
   productList.innerHTML = "";
 
   products.forEach(product => {
+
     const li = document.createElement("li");
+    li.textContent = `${product.name} - $${product.price} `;
 
-    const text = document.createTextNode(
-      `${product.name} - $${product.price} `
-    );
+    const btn = document.createElement("button");
+    btn.textContent = "Add to Cart";
 
-    const button = document.createElement("button");
-    button.textContent = "Add to Cart";
-    button.dataset.id = product.id;
+    btn.addEventListener("click", () => {
 
-    li.appendChild(text);
-    li.appendChild(button);
+      const cart = getCart();
+
+      cart.push({
+        id: product.id,
+        name: product.name,
+        price: product.price
+      });
+
+      setCart(cart);
+      renderCart();
+
+    });
+
+    li.appendChild(btn);
     productList.appendChild(li);
+
   });
-};
+}
 
+function renderCart() {
 
-const renderCart = () => {
-  cartList.innerHTML = "";
   const cart = getCart();
+  cartList.innerHTML = "";
 
   cart.forEach(item => {
+
     const li = document.createElement("li");
     li.textContent = `${item.name} - $${item.price}`;
+
     cartList.appendChild(li);
-  });
-};
 
-
-const addToCart = (id) => {
-  const product = products.find(p => p.id === id);
-  if (!product) return;
-
-  const cart = getCart();
-
-  cart.push({
-    id: product.id,
-    name: product.name,
-    price: product.price
   });
 
-  saveCart(cart);
-  renderCart();
-};
+}
 
+clearBtn.addEventListener("click", () => {
 
-const clearCart = () => {
   sessionStorage.removeItem("cart");
-  window.__cartBackup__ = [];
+  window.cartBackup = [];
+
   renderCart();
-};
 
-
-productList.addEventListener("click", (e) => {
-  if (e.target.tagName === "BUTTON") {
-    const id = Number(e.target.dataset.id);
-    addToCart(id);
-  }
 });
 
-clearCartBtn.addEventListener("click", clearCart);
-
 renderProducts();
+renderCart();
